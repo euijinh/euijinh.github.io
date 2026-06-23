@@ -26,6 +26,7 @@ Email: ehong [at] andrew [dot] cmu [dot] edu
 
 ## News
 
-- **2026.06** — One paper accepted to Interspeech 2026.
-- **2026.06** — Two workshop papers accepted to ICML 2026 workshops.
-- **2026.05** — Submitted work to NeurIPS 2026.
+- **2026.06** — CD-RoPE paperaccepted to Interspeech 2026.
+- **2026.06** — DeltaMomentum paper accepted to ICML 2026 HiLD workshop.
+- **2026.06** — Control-Theoretic Muon Advantage paper accepted to ICML 2026 HiLD workshop.
+- **2026.05** — Submitted two papers to NeurIPS 2026.
