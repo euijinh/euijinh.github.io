@@ -30,7 +30,7 @@ author:
   location         : "Pittsburgh, PA"
   employer         : "Carnegie Mellon University"
   uri              : # URL
-  email            : "ehong [at] andrew [dot] cmu [dot] edu" 
+  email            : # "ehong [at] andrew [dot] cmu [dot] edu" 
 
   # Academic websites
   academia         : # URL
@@ -38,7 +38,7 @@ author:
   googlescholar    : # URL - Update with the correct link to your profile
   inspire-hep      : # URL
   impactstory      : # URL
-  orcid            : "https://orcid.org/0009-0000-8998-1279"
+  orcid            : # "https://orcid.org/0009-0000-8998-1279"
   semantic         : # URL
   ssrn             : # URL
   pubmed           : # URL

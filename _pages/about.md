@@ -20,12 +20,12 @@ My research interests lie in machine learning, representation learning, optimiza
 - Sequence modeling
 - Language and speech models
 
+## Contact
+
+Email: ehong [at] andrew [dot] cmu [dot] edu
+
 ## News
 
 - **2026.06** — One paper accepted to Interspeech 2026.
 - **2026.06** — Two workshop papers accepted to ICML 2026 workshops.
 - **2026.05** — Submitted work to NeurIPS 2026.
-
-## Contact
-
-Email: ehong [at] andrew [dot] cmu [dot] edu
