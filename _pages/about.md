@@ -14,8 +14,8 @@ My research interests lie in machine learning, representation learning, optimiza
 
 ## Research Interests
 
-- Optimization for deep learning
 - Efficient training and scalable learning algorithms
+- Optimization for deep learning
 - Neural architecture design
 - Sequence modeling
 - Language and speech models
