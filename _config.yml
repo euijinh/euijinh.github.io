@@ -23,7 +23,7 @@ repository               : "euijinh/euijinh.github.io"
 #               Additional customization can be done by editing /_includes/author-profile.html
 author:
   # Biographic information
-  avatar           : "profile.jpg"
+  avatar           : "/images/profile.jpg"
   name             : "Euijin Hong"
   pronouns         : # example: "she/her"  
   bio              : "Graduate student at Carnegie Mellon University."
