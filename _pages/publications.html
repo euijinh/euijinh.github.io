@@ -11,26 +11,34 @@ author_profile: true
 
 {% include base_path %}
 
-<!-- New style rendering if publication categories are defined -->
-{% if site.publication_category %}
-  {% for category in site.publication_category  %}
-    {% assign title_shown = false %}
-    {% for post in site.publications reversed %}
-      {% if post.category != category[0] %}
-        {% continue %}
-      {% endif %}
-      {% unless title_shown %}
-        <h2>{{ category[1].title }}</h2><hr />
-        {% assign title_shown = true %}
-      {% endunless %}
+{% assign pubs = site.publications | sort: 'date' | reverse %}
+
+{% comment %} Count preprints (category: preprint or pubtype: preprint) {% endcomment %}
+{% assign preprint_count = 0 %}
+{% for post in pubs %}
+  {% if post.category == 'preprint' or post.pubtype == 'preprint' %}
+    {% assign preprint_count = preprint_count | plus: 1 %}
+  {% endif %}
+{% endfor %}
+
+{% if preprint_count > 0 %}
+  <h2>Preprints</h2><hr />
+  {% for post in pubs %}
+    {% if post.category == 'preprint' or post.pubtype == 'preprint' %}
       {% include archive-single.html %}
-    {% endfor %}
-  {% endfor %}
-{% else %}
-  {% for post in site.publications reversed %}
-    {% include archive-single.html %}
+    {% endif %}
   {% endfor %}
 {% endif %}
 
-
-
+{% comment %} Remaining publications grouped by year (newest first) {% endcomment %}
+{% assign current_year = "" %}
+{% for post in pubs %}
+  {% unless post.category == 'preprint' or post.pubtype == 'preprint' %}
+    {% assign y = post.date | date: "%Y" %}
+    {% if y != current_year %}
+      <h2>{{ y }}</h2><hr />
+      {% assign current_year = y %}
+    {% endif %}
+    {% include archive-single.html %}
+  {% endunless %}
+{% endfor %}

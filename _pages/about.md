@@ -8,7 +8,7 @@ redirect_from:
   - /about.html
 ---
 
-I just received my Master's degree from the Electrical and Computer Engineering department at Carnegie Mellon University.
+I'm actively looking for PhD opportunities! I recently received my Master's degree from the Electrical and Computer Engineering department at Carnegie Mellon University.
 
 <!-- My research interests primarily lie in machine learning, representation learning, optimization, efficient training, mechanistic interpretability, sequence modeling, and speech/language modeling. I am particularly interested in developing algorithmic and systems-level methods that improve the scalability, efficiency, and reliability of modern neural networks. -->
 
