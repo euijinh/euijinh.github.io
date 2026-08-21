@@ -28,7 +28,7 @@ Email: ehong [at] andrew [dot] cmu [dot] edu
 
 ## News
 
-- **2026.08** — DeltaMomentum paper published at ArXiv (https://arxiv.org/abs/2608.XXXXX).
+- **2026.08** — DeltaMomentum paper published at arXiv (https://arxiv.org/abs/2608.19497).
 - **2026.06** — CD-RoPE paper accepted to Interspeech 2026.
 - **2026.06** — DeltaMomentum paper accepted to ICML 2026 HiLD workshop.
 - **2026.06** — Control-Theoretic Account of Muon's Advantage paper accepted to ICML 2026 HiLD workshop.
