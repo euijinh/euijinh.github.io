@@ -3,7 +3,8 @@ title: "Spectral Equalization Minimizes Total Training Energy: A Control-Theoret
 collection: publications
 category: workshops
 permalink: /publication/2026-07-10-Spectral-Equalization
-excerpt: "A control-theoretic account of Muon's advantage in training energy minimization."
+excerpt: "A control-theoretic framework linking Muon’s spectral equalization to lower cumulative training error.
+"
 date: 2026-07-10
 venue: '4th Workshop on High-dimensional Learning Dynamics (HiLD) at ICML'
 paperurl: 'https://openreview.net/pdf?id=Nu8P86ml5b'
