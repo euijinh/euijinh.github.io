@@ -9,8 +9,6 @@ tags:
   - Associative Memory
 ---
 
-# AK-Momentum
-
 ### On why we devised it, how it works, and why we should use it
 
 *Activation-Keyed Momentum: An anisotropic momentum update via the delta rule*
