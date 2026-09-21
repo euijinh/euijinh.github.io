@@ -1,17 +1,19 @@
 ---
-title: 'AK-Momentum'
+
+## title: 'AK-Momentum'
+
 date: 2026-08-19
 permalink: /posts/2026/08/ak-momentum/
 tags:
-  - AK-Momentum
-  - DeltaMomentum
-  - ML Optimizers
-  - Associative Memory
----
 
-### On why we devised it, how it works, and why we should use it
+- AK-Momentum
+- DeltaMomentum
+- ML Optimizers
+- Associative Memory
 
-*Activation-Keyed Momentum: An anisotropic momentum update via the delta rule*
+## On why we devised it, how it works, and why we should use it
+
+***Activation-Keyed Momentum: An anisotropic momentum update via the delta rule***
 
 **Euijin Hong and Guannan Qu**  
 Electrical and Computer Engineering, Carnegie Mellon University  
@@ -27,7 +29,7 @@ So, the existing problem is clear: *we want a method to update the weights based
 
 Here, a simple yet powerful idea comes into play: why not leverage the natural and free decomposition of the gradient as an outer product of the output-side error and the input activation, and utilize the input activation to perform a direction-selective forgetting within the momentum buffer? This is exactly how the delta rule works in associative memories: to selectively forget and update the memory based on the historical accounting of the *keys*. Correspondingly, the input activation becomes the *key* in the delta rule, and the output-side error becomes the *value* associated with it. The momentum buffer is therefore "*activation-keyed*", and the resulting momentum update is a single-step online delta-rule based update in this key-value formulation.
 
-That is the whole motivation and idea behind Activation-Keyed Momentum (AK-Momentum). **AK-Momentum makes the update depend on the input directions a layer actually sees**, using those inputs to decide which stored information to refresh. Consequently, AK-Momentum offers a preconditioner-like update directly to the momentum buffer, without heavy computation and additional memory required by explicitly formed preconditioners.
+That is the whole motivation and idea behind Activation-Keyed Momentum (AK-Momentum). AK-Momentum makes the update depend on the input directions a layer actually sees, using those inputs to decide which stored information to refresh. Consequently, ++AK-Momentum offers a preconditioner-like update directly to the momentum buffer, without heavy computation and additional memory required by explicitly formed preconditioners++.
 
 The proposed update rule operates inside the momentum buffer. In FineWeb-Edu pretraining, **AK-AdamW reaches AdamW's validation loss in up to $46.39\pm4.32$ fewer steps at 67M and $22.12\pm0.80$ fewer at 370M**, over three seeds. A single-seed 1B run provides a further scale check. Below, we explain the mechanism, what the theory establishes, and when the saved steps outweigh the additional work per step.
 
