@@ -1,6 +1,11 @@
 <!-- start custom footer snippets -->
 
 <!-- Support for MathJax -->
+<!-- Kramdown turns display $$ into \[..\], but leaves inline $...$ as text.
+     MathJax 4 does not treat single dollars as math unless configured. -->
+<script>
+window.MathJax={tex:{inlineMath:[["$","$"],["\\(","\\)"]],displayMath:[["$$","$$"],["\\[","\\]"]]}};
+</script>
 <script id="MathJax-script" defer src="https://cdn.jsdelivr.net/npm/mathjax@4.0.0/tex-mml-chtml.js"></script>
 
 <!-- Support for Mermaid -->
