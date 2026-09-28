@@ -1,0 +1,122 @@
+{%- assign ak_figure_a_base = site.baseurl | append: "/assets/ak-momentum/figure-a" -%}
+<div class="ak-figure-a-embed">
+<style>
+figure.ak-figure-a {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  margin: 1.6em 0 1.4em;
+}
+figure.ak-figure-a .ak-figure-a__stage {
+  position: relative;
+  width: 100%;
+  background: #fff;
+  line-height: 0;
+  overflow: hidden;
+  border: 1px solid #dbe1e8;
+  border-radius: 4px;
+}
+figure.ak-figure-a .ak-figure-a__still img {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  margin: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+figure.ak-figure-a .ak-figure-a__frame {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  border: 0;
+  background: #fff;
+  color-scheme: light;
+}
+figure.ak-figure-a:not(.is-live) .ak-figure-a__frame {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  visibility: hidden;
+  pointer-events: none;
+}
+figure.ak-figure-a.is-live .ak-figure-a__still {
+  display: none;
+}
+figure.ak-figure-a.is-live .ak-figure-a__frame {
+  position: relative;
+  visibility: visible;
+  pointer-events: auto;
+}
+figure.ak-figure-a .ak-figure-a__open[hidden],
+figure.ak-figure-a.is-live .ak-figure-a__open {
+  display: none !important;
+}
+figure.ak-figure-a .ak-figure-a__open {
+  display: inline-block;
+  margin: 0.85em 0 0;
+  padding: 0.55em 0.9em;
+  font-family: inherit;
+  font-size: 0.95em;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 1.3;
+  color: #172b42;
+  background: #fff;
+  border: 1px solid #dbe1e8;
+  border-radius: 6px;
+  text-decoration: none;
+  cursor: pointer;
+}
+figure.ak-figure-a .ak-figure-a__open:hover {
+  background: #f5f7fb;
+}
+figure.ak-figure-a .ak-figure-a__open:focus-visible {
+  outline: 3px solid #4b60bd;
+  outline-offset: 3px;
+}
+figure.ak-figure-a figcaption {
+  display: block;
+  width: 100%;
+  margin: 0.85em 0 0;
+  color: inherit;
+  font-family: inherit;
+  font-size: 1em;
+  font-style: italic;
+  line-height: 1.6;
+}
+figure.ak-figure-a figcaption strong {
+  font-weight: 600;
+}
+figure.ak-figure-a .ak-figure-a__download {
+  display: block;
+  margin-top: 0.35em;
+  font-style: normal;
+  font-size: 0.92em;
+}
+@media print {
+  figure.ak-figure-a .ak-figure-a__frame,
+  figure.ak-figure-a .ak-figure-a__open {
+    display: none !important;
+  }
+  figure.ak-figure-a .ak-figure-a__still,
+  figure.ak-figure-a .ak-figure-a__still[hidden] {
+    display: block !important;
+  }
+}
+</style>
+<figure id="ak-momentum-figure-a" class="ak-figure-a" data-asset-base="{{ ak_figure_a_base }}">
+  <div class="ak-figure-a__stage">
+    <div class="ak-figure-a__still">
+      <img src="{{ ak_figure_a_base }}/ak-momentum-figure-a.svg" width="1200" height="840" alt="AK-Momentum updates a two-component memory initially equal to (1, 1). With input key u, global decay gives (0.9, 0.9); selective removal gives (0.5, 0.9); writing 0.2 along u gives (0.7, 0.9). Blue shows retained old memory, green shows the new write, and an orange arrow shows key-specific removal. The perpendicular v component still decays by beta.">
+    </div>
+    <iframe class="ak-figure-a__frame" title="Interactive Figure A, Refresh the direction you see" aria-hidden="true" tabindex="-1"></iframe>
+  </div>
+  <button type="button" class="ak-figure-a__open" hidden>Open the interactive figure</button>
+  <noscript><a class="ak-figure-a__open" href="{{ ak_figure_a_base }}/ak-momentum-figure-a.html">Open the interactive figure</a></noscript>
+  <figcaption id="ak-momentum-figure-a-caption"><strong>Figure A. Refreshing a stored association.</strong> An input along \(u\) selects the corresponding association in the momentum buffer. Ordinary decay first acts on all directions; the delta-rule correction removes an additional key-aligned contribution and writes the new value along that same direction. Blue denotes retained old memory and green denotes newly written content. Old information is retained with factor \(\beta-\eta\) along \(u\), while information along the perpendicular direction \(v\) retains the ordinary decay factor \(\beta\). The illustration uses a single output component and illustrative parameters \(\beta=0.9\), \(\eta=0.4\), and \(\delta=0.5\). The repeated-key view isolates the contribution of the initial memory; new writes are excluded from that view. <span class="ak-figure-a__download"><a href="{{ ak_figure_a_base }}/ak-momentum-figure-a.png">Download the static PNG</a>.</span></figcaption>
+</figure>
+<script src="{{ ak_figure_a_base }}/embed.js" defer></script>
+</div>
