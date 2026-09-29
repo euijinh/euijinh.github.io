@@ -207,22 +207,36 @@ input[type=range]{accent-color:#4b60bd;flex:1;width:auto;cursor:pointer;height:2
     out+=line(mobile?409:758,y-7,mobile?438:791,y-7,C.erase,3)+text(mobile?449:806,y,'Removal',mobile?18:21);
     return out;
   }
+  function formulaRows(s,mobile) {
+    if(s.mode==='repeat'){
+      const other=s.key==='u'?'v':'u', size=mobile?21:26;
+      const ak=[
+        {s:`AK:  C⁽${s.key}⁾ₙ = (β − η)ⁿ`, size, color:C.ink, weight:500},
+        {s:`C⁽${other}⁾ₙ = βⁿ`, size, color:C.ink, weight:500}
+      ];
+      const ema={s:'EMA:  C⁽u⁾ₙ = C⁽v⁾ₙ = βⁿ', size:mobile?21:25, color:C.muted, weight:400};
+      return mobile?[ak,[ema]]:[[...ak,ema]];
+    }
+    const size=mobile?22:29;
+    const terms=[
+      {s:'Mₜ =', size, color:C.ink, weight:500},
+      {s:'βMₜ₋₁', size, color:C.old, weight:500},
+      {s:'− η(Mₜ₋₁x̂)x̂ᵀ', size, color:C.erase, weight:500},
+      {s:'+ ηδx̂ᵀ', size, color:C.fresh, weight:500}
+    ];
+    const note={s:'x̂ = '+s.key+'  ·  u ⟂ v', size:mobile?18:24, color:C.muted, weight:400};
+    return mobile?[terms,[note]]:[[...terms,note]];
+  }
   function formula(s,mobile) {
     const y=mobile?(s.mode==='repeat'?1044:1004):773;
-    const top=mobile?y-32:731,h=mobile?(s.mode==='repeat'?87:85):82;
-    let out=rect(mobile?32:38,top,mobile?576:1124,h,C.pale,'rx="10"');
-    if(s.mode==='repeat'){
-      const other=s.key==='u'?'v':'u';
-      if(mobile)out+=text(50,y,`AK:  C⁽${s.key}⁾ₙ = (β − η)ⁿ,   C⁽${other}⁾ₙ = βⁿ`,23,C.ink,500)+text(50,y+35,'EMA:  C⁽u⁾ₙ = C⁽v⁾ₙ = βⁿ',23,C.muted);
-      else out+=text(63,y,`AK:  C⁽${s.key}⁾ₙ = (β − η)ⁿ,  C⁽${other}⁾ₙ = βⁿ`,26,C.ink,500)+text(659,y,'EMA:  C⁽u⁾ₙ = C⁽v⁾ₙ = βⁿ',25,C.muted);
-    } else {
-      if(mobile){
-        out+=text(50,y,'Mₜ = βMₜ₋₁ − η(Mₜ₋₁x̂)x̂ᵀ',26,C.ink,500)+text(116,y+35,'+ ηδx̂ᵀ',26,C.fresh,600);
-      } else {
-        out+=text(65,y,'Mₜ =',29,C.ink,500)+text(162,y,'βMₜ₋₁',29,C.old,500)+text(283,y,'− η(Mₜ₋₁x̂)x̂ᵀ',29,C.erase,500)+text(584,y,'+ ηδx̂ᵀ',29,C.fresh,500);
-        out+=text(850,y,'x̂ = '+s.key+'  ·  u ⟂ v',24,C.muted);
-      }
-    }
+    const top=mobile?y-32:731,h=mobile?(s.mode==='repeat'?96:96):82;
+    const boxX=mobile?32:38, boxW=mobile?576:1124, gap=mobile?20:40, rowGap=mobile?14:0;
+    let out=`<rect data-formula-box="1" data-gap="${gap}" data-row-gap="${rowGap}" x="${boxX}" y="${top}" width="${boxW}" height="${h}" fill="${C.pale}" rx="10"/>`;
+    formulaRows(s,mobile).forEach((row,ri)=>{
+      out+=`<g data-formula-row="${ri}">`;
+      for(const term of row) out+=`<text data-formula-term="1" x="0" y="${top+h/2}" font-size="${term.size}" fill="${term.color}" font-weight="${term.weight}" text-anchor="start">${esc(term.s)}</text>`;
+      out+='</g>';
+    });
     return out;
   }
   function render({time=16,mode='single',key='u',mobile=false}={}) {
@@ -281,8 +295,44 @@ input[type=range]{accent-color:#4b60bd;flex:1;width:auto;cursor:pointer;height:2
   const mobile=()=>window.innerWidth<=680;
   const stageSpecs=()=>mode==='single'?[[0,'Read'],[4.5,'Decay'],[7.5,'Remove'],[10.8,'Write'],[16,'Result']]:[[0,'Initial'],[2.5,'1'],[4.1,'2'],[5.7,'3'],[7.3,'4'],[8.9,'5'],[12,'6']];
   function resizeParent(){const height=Math.ceil(document.querySelector('main').getBoundingClientRect().height);if(window.parent!==window&&height!==lastHeight){lastHeight=height;window.parent.postMessage({type:'ak-figure-a-resize',height},'*');}}
+  function layoutFormula(root){
+    const svg=root.querySelector('svg');
+    const box=svg&&svg.querySelector('[data-formula-box]');
+    const rows=svg?[...svg.querySelectorAll('[data-formula-row]')]:[];
+    if(!box||!rows.length)return;
+    const bx=+box.getAttribute('x'), by=+box.getAttribute('y'), bw=+box.getAttribute('width'), bh=+box.getAttribute('height');
+    const preferred=+box.getAttribute('data-gap')||36, rowGap=+box.getAttribute('data-row-gap')||12, inset=20;
+    const measured=rows.map(row=>{
+      const terms=[...row.querySelectorAll('[data-formula-term]')];
+      const widths=[], heights=[];
+      for(const t of terms){const bb=t.getBBox(); widths.push(bb.width); heights.push(bb.height);}
+      return {terms,widths,heights,rowH:Math.max(0,...heights)};
+    });
+    const blockH=measured.reduce((sum,r)=>sum+r.rowH,0)+rowGap*Math.max(0,measured.length-1);
+    let yCursor=by+(bh-blockH)/2;
+    for(const r of measured){
+      const n=r.terms.length, sumW=r.widths.reduce((a,b)=>a+b,0);
+      let useGap=preferred;
+      if(n>1 && sumW+useGap*(n-1)>bw-inset*2) useGap=Math.max(12,(bw-inset*2-sumW)/(n-1));
+      const contentW=sumW+useGap*Math.max(0,n-1);
+      let x=bx+(bw-contentW)/2;
+      const rowMid=yCursor+r.rowH/2;
+      r.terms.forEach((t,i)=>{
+        t.setAttribute('y',rowMid);
+        let bb=t.getBBox();
+        t.setAttribute('y',rowMid+(rowMid-(bb.y+bb.height/2)));
+        t.setAttribute('x',x);
+        bb=t.getBBox();
+        t.setAttribute('x',+t.getAttribute('x')+(x-bb.x));
+        bb=t.getBBox();
+        x=bb.x+bb.width+useGap;
+      });
+      yCursor+=r.rowH+rowGap;
+    }
+  }
   function sync(){
     drawing.innerHTML=AKFigureA.render({mode,key,time,mobile:mobile()});
+    layoutFormula(drawing);
     seek.max=duration();seek.value=time;
     const playbackLabel=playing?'Pause animation':'Play animation';
     // Preserve the icon between frames so a pointer press/release has a stable target.
