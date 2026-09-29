@@ -214,7 +214,7 @@ input[type=range]{accent-color:#4b60bd;flex:1;width:auto;cursor:pointer;height:2
         {s:`AK:  C⁽${s.key}⁾ₙ = (β − η)ⁿ`, size, color:C.ink, weight:500},
         {s:`C⁽${other}⁾ₙ = βⁿ`, size, color:C.ink, weight:500}
       ];
-      const ema={s:'EMA:  C⁽u⁾ₙ = C⁽v⁾ₙ = βⁿ', size:mobile?21:25, color:C.muted, weight:400};
+      const ema={s:'EMA:  C⁽u⁾ₙ = C⁽v⁾ₙ = βⁿ', size:mobile?21:25, color:C.muted, weight:400, block:true};
       return mobile?[ak,[ema]]:[[...ak,ema]];
     }
     const size=mobile?22:29;
@@ -224,17 +224,17 @@ input[type=range]{accent-color:#4b60bd;flex:1;width:auto;cursor:pointer;height:2
       {s:'− η(Mₜ₋₁x̂)x̂ᵀ', size, color:C.erase, weight:500},
       {s:'+ ηδx̂ᵀ', size, color:C.fresh, weight:500}
     ];
-    const note={s:'x̂ = '+s.key+'  ·  u ⟂ v', size:mobile?18:24, color:C.muted, weight:400};
+    const note={s:'x̂ = '+s.key+'  ·  u ⟂ v', size:mobile?18:24, color:C.muted, weight:400, block:true};
     return mobile?[terms,[note]]:[[...terms,note]];
   }
   function formula(s,mobile) {
     const y=mobile?(s.mode==='repeat'?1044:1004):773;
     const top=mobile?y-32:731,h=mobile?(s.mode==='repeat'?96:96):82;
-    const boxX=mobile?32:38, boxW=mobile?576:1124, gap=mobile?20:40, rowGap=mobile?14:0;
-    let out=`<rect data-formula-box="1" data-gap="${gap}" data-row-gap="${rowGap}" x="${boxX}" y="${top}" width="${boxW}" height="${h}" fill="${C.pale}" rx="10"/>`;
+    const boxX=mobile?32:38, boxW=mobile?576:1124, gap=mobile?20:40, blockGap=mobile?44:88, rowGap=mobile?14:0;
+    let out=`<rect data-formula-box="1" data-gap="${gap}" data-block-gap="${blockGap}" data-row-gap="${rowGap}" x="${boxX}" y="${top}" width="${boxW}" height="${h}" fill="${C.pale}" rx="10"/>`;
     formulaRows(s,mobile).forEach((row,ri)=>{
       out+=`<g data-formula-row="${ri}">`;
-      for(const term of row) out+=`<text data-formula-term="1" x="0" y="${top+h/2}" font-size="${term.size}" fill="${term.color}" font-weight="${term.weight}" text-anchor="start">${esc(term.s)}</text>`;
+      for(const term of row) out+=`<text data-formula-term="1"${term.block?' data-block="1"':''} x="0" y="${top+h/2}" font-size="${term.size}" fill="${term.color}" font-weight="${term.weight}" text-anchor="start">${esc(term.s)}</text>`;
       out+='</g>';
     });
     return out;
@@ -301,7 +301,7 @@ input[type=range]{accent-color:#4b60bd;flex:1;width:auto;cursor:pointer;height:2
     const rows=svg?[...svg.querySelectorAll('[data-formula-row]')]:[];
     if(!box||!rows.length)return;
     const bx=+box.getAttribute('x'), by=+box.getAttribute('y'), bw=+box.getAttribute('width'), bh=+box.getAttribute('height');
-    const preferred=+box.getAttribute('data-gap')||36, rowGap=+box.getAttribute('data-row-gap')||12, inset=20;
+    const preferred=+box.getAttribute('data-gap')||36, blockPreferred=+box.getAttribute('data-block-gap')||preferred*2, rowGap=+box.getAttribute('data-row-gap')||12, inset=20;
     const measured=rows.map(row=>{
       const terms=[...row.querySelectorAll('[data-formula-term]')];
       const widths=[], heights=[];
@@ -312,12 +312,21 @@ input[type=range]{accent-color:#4b60bd;flex:1;width:auto;cursor:pointer;height:2
     let yCursor=by+(bh-blockH)/2;
     for(const r of measured){
       const n=r.terms.length, sumW=r.widths.reduce((a,b)=>a+b,0);
-      let useGap=preferred;
-      if(n>1 && sumW+useGap*(n-1)>bw-inset*2) useGap=Math.max(12,(bw-inset*2-sumW)/(n-1));
-      const contentW=sumW+useGap*Math.max(0,n-1);
+      const blocks=r.terms.filter((t,i)=>i>0&&t.getAttribute('data-block')==='1').length;
+      const joins=Math.max(0,n-1-blocks);
+      let useGap=preferred, useBlock=Math.max(blockPreferred,preferred+8);
+      const gapBudget=()=>useGap*joins+useBlock*blocks;
+      if(n>1 && sumW+gapBudget()>bw-inset*2){
+        const scale=Math.max(0,(bw-inset*2-sumW)/gapBudget());
+        useGap=Math.max(12,useGap*scale);
+        useBlock=Math.max(useGap+8,useBlock*scale);
+      }
+      const contentW=sumW+useGap*joins+useBlock*blocks;
       let x=bx+(bw-contentW)/2;
       const rowMid=yCursor+r.rowH/2;
       r.terms.forEach((t,i)=>{
+        const before=i===0?0:(t.getAttribute('data-block')==='1'?useBlock:useGap);
+        x+=before;
         t.setAttribute('y',rowMid);
         let bb=t.getBBox();
         t.setAttribute('y',rowMid+(rowMid-(bb.y+bb.height/2)));
@@ -325,7 +334,7 @@ input[type=range]{accent-color:#4b60bd;flex:1;width:auto;cursor:pointer;height:2
         bb=t.getBBox();
         t.setAttribute('x',+t.getAttribute('x')+(x-bb.x));
         bb=t.getBBox();
-        x=bb.x+bb.width+useGap;
+        x=bb.x+bb.width;
       });
       yCursor+=r.rowH+rowGap;
     }
