@@ -13,7 +13,7 @@ main{max-width:1200px;margin:0 auto;padding-bottom:12px}#drawing{width:100%;line
 button:hover{background:#f5f7fb}button[aria-pressed="true"]{color:#fff;background:#172b42;border-color:#172b42}button:focus-visible,input:focus-visible{outline:3px solid #4b60bd;outline-offset:3px}
 .label{font-size:14px;color:#566577;margin:0 4px 0 12px}.timeline{width:100%;margin:18px 0 0;padding:0;display:flex;gap:10px;align-items:center}
 .timeline .transport-button{display:inline-flex;align-items:center;justify-content:center;flex:0 0 44px;width:44px;height:44px;min-height:44px;padding:10px;margin:0;border:0;border-radius:50%;background:transparent;color:#172b42}
-.timeline .transport-button:hover{background:#eef1f8}.transport-button svg{display:block;width:24px;height:24px;flex:none}
+.timeline .transport-button:hover{background:#eef1f8}.transport-button svg{display:block;width:24px;height:24px;flex:none;pointer-events:none}
 input[type=range]{accent-color:#4b60bd;flex:1;width:auto;cursor:pointer;height:26px;min-width:0;margin:0}
 .stages{display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin:9px 4% 0}.stages button{border-color:transparent;padding:7px 9px;min-height:34px;font-size:13px}.stages button[aria-pressed="true"]{background:#eef1f8;color:#172b42}
 .note{font-size:12px;color:#566577;line-height:1.6;margin:12px 4% 0}.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
@@ -272,7 +272,7 @@ input[type=range]{accent-color:#4b60bd;flex:1;width:auto;cursor:pointer;height:2
   const $=id=>document.getElementById(id);
   const media=window.matchMedia('(prefers-reduced-motion: reduce)');
   let mode='single',key='u',time=media.matches?16:0,playing=!media.matches,last=null,frame=null,lastHeight=0;
-  const drawing=$('drawing'),seek=$('seek');
+  const drawing=$('drawing'),seek=$('seek'),play=$('play');
   const playbackIcons={
     play:'<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 4.5v15l12-7.5z" fill="currentColor"/></svg>',
     pause:'<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="6" y="4" width="4" height="16" rx="1" fill="currentColor"/><rect x="14" y="4" width="4" height="16" rx="1" fill="currentColor"/></svg>'
@@ -284,9 +284,13 @@ input[type=range]{accent-color:#4b60bd;flex:1;width:auto;cursor:pointer;height:2
   function sync(){
     drawing.innerHTML=AKFigureA.render({mode,key,time,mobile:mobile()});
     seek.max=duration();seek.value=time;
-    $('play').innerHTML=playing?playbackIcons.pause:playbackIcons.play;
-    $('play').setAttribute('aria-label',playing?'Pause animation':'Play animation');
-    $('play').setAttribute('title',playing?'Pause animation':'Play animation');
+    const playbackLabel=playing?'Pause animation':'Play animation';
+    // Preserve the icon between frames so a pointer press/release has a stable target.
+    if(play.getAttribute('aria-label')!==playbackLabel){
+      play.innerHTML=playing?playbackIcons.pause:playbackIcons.play;
+      play.setAttribute('aria-label',playbackLabel);
+      play.setAttribute('title',playbackLabel);
+    }
     $('one-update').setAttribute('aria-pressed',String(mode==='single'));
     $('repeated-key').setAttribute('aria-pressed',String(mode==='repeat'));
     $('key-u').setAttribute('aria-pressed',String(key==='u'));
