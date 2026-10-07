@@ -28,6 +28,7 @@ Email: ehong [at] andrew [dot] cmu [dot] edu
 
 ## News
 
+- **2026.09** — AK-Momentum (prev. DeltaMomentum) paper accepted to NeurIPS 2026 Main Track.
 - **2026.08** — AK-Momentum (prev. DeltaMomentum) paper published on [arXiv](https://arxiv.org/abs/2608.19497).
 - **2026.06** — CD-RoPE paper accepted to Interspeech 2026.
 - **2026.06** — AK-Momentum (prev. DeltaMomentum) paper accepted to ICML 2026 HiLD workshop.
