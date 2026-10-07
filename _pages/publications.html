@@ -22,7 +22,7 @@ author_profile: true
 {% endfor %}
 
 {% if preprint_count > 0 %}
-  <h2>Preprints</h2><hr />
+  <h2>Preprints</h2>
   {% for post in pubs %}
     {% if post.category == 'preprint' or post.pubtype == 'preprint' %}
       {% include archive-single.html %}
@@ -36,7 +36,7 @@ author_profile: true
   {% unless post.category == 'preprint' or post.pubtype == 'preprint' %}
     {% assign y = post.date | date: "%Y" %}
     {% if y != current_year %}
-      <h2>{{ y }}</h2><hr />
+      <h2>{{ y }}</h2>
       {% assign current_year = y %}
     {% endif %}
     {% include archive-single.html %}
