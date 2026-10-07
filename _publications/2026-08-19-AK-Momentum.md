@@ -1,7 +1,7 @@
 ---
 title: "Activation-Keyed Momentum: An Anisotropic Momentum Update via the Delta Rule"
 collection: publications
-category: preprint
+category: conferences
 permalink: /publication/2026-08-19-AK-Momentum
 excerpt: 'An activation-keyed delta-rule-based momentum update that adapts momentum’s forgetting rates to input direction frequencies, improving language-model pretraining efficiency without additional persistent optimizer state.'
 date: 2026-08-19
