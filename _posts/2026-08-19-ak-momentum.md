@@ -1,7 +1,16 @@
 ---
 title: 'AK-Momentum'
+description: 'On why we devised it, how it works, and why we should use it'
 date: 2026-08-19
 permalink: /posts/2026/08/ak-momentum/
+authors:
+  - name: Euijin Hong
+    url: /
+    affiliation: Carnegie Mellon University
+  - name: Guannan Qu
+    affiliation: Carnegie Mellon University
+venue: 'NeurIPS 2026 Main Track (Poster)'
+thumbnail: /assets/ak-momentum/figure-a/ak-momentum-figure-a.png
 tags:
   - AK-Momentum
   - DeltaMomentum
@@ -9,13 +18,9 @@ tags:
   - Associative Memory
 ---
 
-## On why we devised it, how it works, and why we should use it
-
 ***Activation-Keyed Momentum: An anisotropic momentum update via the delta rule***
 
-**Euijin Hong and Guannan Qu**  
-Electrical and Computer Engineering, Carnegie Mellon University  
-NeurIPS 2026 Main Track (Poster) · [Paper](https://arxiv.org/abs/2608.19491v2) · [PDF](https://arxiv.org/pdf/2608.19491v2) · [Code](https://github.com/euijinh/ak-momentum)
+\[[Paper](https://arxiv.org/abs/2608.19491v2)\] \[[PDF](https://arxiv.org/pdf/2608.19491v2)\] \[[Code](https://github.com/euijinh/ak-momentum)\]
 
 Modern optimizers from AdamW to Muon use momentum to form their updates. One intuitive way to interpret the role of momentum is to view it as a "memory" of previous gradients, which the optimizer uses to dampen oscillations and accelerate convergence. Standard momentum, also known as exponential moving average (EMA) momentum, lets that memory fade at the same rate in every input direction.
 

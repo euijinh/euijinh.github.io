@@ -1,0 +1,70 @@
+---
+layout: default
+---
+
+{% include base_path %}
+
+{% capture toc %}
+  {% assign chunks = content | split: '<h' %}
+  {% assign sub_open = false %}
+  {% for chunk in chunks offset: 1 %}
+    {% assign level = chunk | slice: 0 %}
+    {% unless level == '2' or level == '3' %}{% continue %}{% endunless %}
+    {% assign tag = chunk | split: '>' | first %}
+    {% unless tag contains 'id="' %}{% continue %}{% endunless %}
+    {% assign id = tag | split: 'id="' | last | split: '"' | first %}
+    {% assign text = chunk | split: '</h' | first | remove_first: tag | remove_first: '>' | strip_html | strip %}
+    {% if level == '2' %}
+      {% if sub_open %}</ul>{% assign sub_open = false %}{% endif %}
+      <div><a href="#{{ id }}">{{ text }}</a></div>
+    {% else %}
+      {% unless sub_open %}<ul>{% assign sub_open = true %}{% endunless %}
+      <li><a href="#{{ id }}">{{ text }}</a></li>
+    {% endif %}
+  {% endfor %}
+  {% if sub_open %}</ul>{% endif %}
+{% endcapture %}
+
+<main class="distill" role="main">
+  <div class="d-title">
+    <h1>{{ page.title }}</h1>
+    {% if page.description %}<p>{{ page.description }}</p>{% endif %}
+  </div>
+
+  <div class="d-byline">
+    <div class="byline">
+      {% if page.authors %}
+        <div class="authors-affiliations">
+          <h3>Authors</h3>
+          <h3>Affiliations</h3>
+          {% for author in page.authors %}
+            <p class="author">{% if author.url %}<a href="{{ author.url }}">{{ author.name }}</a>{% else %}{{ author.name }}{% endif %}</p>
+            <p class="affiliation">{{ author.affiliation }}</p>
+          {% endfor %}
+        </div>
+      {% endif %}
+      <div>
+        <h3>Published</h3>
+        <p>{{ page.date | date: "%B %-d, %Y" }}</p>
+      </div>
+      {% if page.venue %}
+        <div>
+          <h3>Venue</h3>
+          <p>{{ page.venue }}</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="d-article">
+    {% if page.toc != false and toc contains '<a' %}
+      <div class="d-contents">
+        <nav>
+          <h3>Contents</h3>
+          {{ toc }}
+        </nav>
+      </div>
+    {% endif %}
+    {{ content }}
+  </div>
+</main>
