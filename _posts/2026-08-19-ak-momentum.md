@@ -1,6 +1,6 @@
 ---
 title: 'AK-Momentum'
-description: 'On why we devised it, how it works, and why we should use it'
+description: 'Momentum as associative memory of input activations and output-side errors'
 date: 2026-08-19
 permalink: /posts/2026/08/ak-momentum/
 authors:
