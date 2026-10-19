@@ -376,11 +376,18 @@ $blog-font-family: "Roboto", $sans-serif;
   }
 
   figcaption {
-    margin: 12px 0 24px;
-    font-size: 14px;
-    line-height: 1.5;
-    text-align: center;
+    margin: 14px 0 0;
+    font-family: inherit;
+    font-size: 14.5px;
+    font-weight: 400;
+    line-height: 1.6;
+    text-align: left;
     color: var(--global-text-color-light);
+
+    b,
+    strong {
+      color: var(--global-text-color);
+    }
   }
 
   img {
@@ -430,6 +437,157 @@ $blog-font-family: "Roboto", $sans-serif;
 
 html[data-theme="dark"] .d-article a {
   border-bottom-color: rgba(255, 255, 255, 0.4);
+}
+
+/*
+   Figures and tables
+   Panel labels, framed plots and captions follow the STAPLE project page.
+   ========================================================================== */
+
+.d-article {
+  .l-page {
+    grid-column: page;
+  }
+
+  .d-figure,
+  .d-table {
+    display: block;
+    margin: 1em 0 2em;
+  }
+
+  .d-figure__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px 14px;
+  }
+
+  /* Stacked panels stop growing once their plot text is legible */
+  .d-figure__grid--2,
+  .d-figure__grid--3 {
+    grid-template-columns: minmax(0, 600px);
+    justify-content: center;
+  }
+
+  @media (min-width: 1000px) {
+    .d-figure__grid--2 {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 1180px) {
+    .d-figure__grid--3 {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  .d-figure__label {
+    margin: 0 0 8px;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.4;
+    letter-spacing: 0.08em;
+    text-align: center;
+    text-transform: uppercase;
+    color: var(--global-text-color-light);
+  }
+
+  /* Plots are drawn on white, so the frame stays white in the dark theme */
+  .d-figure__frame {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+    overflow: hidden;
+    background: #fff;
+    border: 1px solid var(--global-divider-color);
+    border-radius: 8px;
+
+    img {
+      display: block;
+      width: 100%;
+      height: auto;
+      margin: 0;
+      border-radius: 0;
+    }
+  }
+
+  .d-figure__frame--flush {
+    padding: 0;
+  }
+
+  /* Letterboxes a stacked panel to the aspect ratio of the panel above it */
+  @media (min-width: 1180px) {
+    .d-figure__frame--match img {
+      aspect-ratio: var(--match-aspect);
+      object-fit: contain;
+    }
+  }
+
+  /* An embed reports its height after loading; these set its height before then */
+  .d-figure__embed {
+    display: block;
+    width: 100%;
+    height: var(--embed-height, 600px);
+    margin: 0;
+    border: 0;
+    background: #fff;
+
+    @media (min-width: 1000px) {
+      height: var(--embed-height-wide, var(--embed-height, 600px));
+    }
+  }
+
+  .d-table__wrap {
+    overflow-x: auto;
+    background: var(--global-bg-color);
+    border: 1px solid var(--global-divider-color);
+    border-radius: 8px;
+
+    table {
+      width: 100%;
+      margin: 0;
+      border: 0;
+      font-variant-numeric: tabular-nums;
+    }
+
+    th,
+    td {
+      padding: 9px 16px;
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    th:first-child,
+    td:first-child {
+      text-align: left;
+    }
+
+    th {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--global-text-color-light);
+    }
+  }
+
+  .d-table figcaption {
+    font-size: 13.5px;
+  }
+}
+
+/* Captions under wide figures stay in the text column */
+@supports (grid-template-columns: subgrid) {
+  .d-article .d-figure.l-page {
+    display: grid;
+    grid-template-columns: subgrid;
+
+    > * {
+      grid-column: page;
+    }
+
+    > figcaption {
+      grid-column: text;
+    }
+  }
 }
 
 /*

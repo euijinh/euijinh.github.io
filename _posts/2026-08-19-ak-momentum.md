@@ -10,7 +10,7 @@ authors:
   - name: Guannan Qu
     affiliation: CMU
 venue: 'NeurIPS 2026 Main Track (Poster)'
-thumbnail: /assets/ak-momentum/figure-a/ak-momentum-figure-a.png
+thumbnail: /assets/ak-momentum/figure-h/ak-momentum-concept.png
 tags:
   - AK-Momentum
   - DeltaMomentum
@@ -23,7 +23,19 @@ tags:
 > Conventional momentum forgets past gradients uniformly across input directions. **Activation-Keyed Momentum (AK-Momentum)** instead treats momentum as an associative memory of input activations and output-side errors, using the delta rule to selectively refresh stored associations, yielding direction-dependent forgetting and implicit input-side preconditioning.
 > 
 
-[ Placeholder for headline figure(s): Figure H. and 67M plot of Figure B. ]
+<figure id="ak-momentum-headline" class="d-figure">
+  <div class="d-figure__grid">
+    <div>
+      <div class="d-figure__label">(a) Memory update</div>
+      <div class="d-figure__frame"><img src="{{ site.baseurl }}/assets/ak-momentum/figure-h/ak-momentum-concept.svg" width="1152" height="557" alt="Two response-field diagrams of one memory update. EMA momentum retains β of old memory along both input axes, u₁ and u₂, and adds a thin new write along u₁. AK-Momentum retains β − η along the current input u₁ and β along u₂, and adds a thicker new write along u₁. A dashed curve marks memory before the update, blue the retained memory, and green the new write; β = 0.9, η = 0.4, δₜ = 0.9, Mₜ₋₁ = [0.55, 0.42]."></div>
+    </div>
+    <div>
+      <div class="d-figure__label">(b) 67M pretraining</div>
+      <div class="d-figure__frame d-figure__frame--match" style="--match-aspect: 864 / 417.6"><img src="{{ site.baseurl }}/assets/ak-momentum/figure-b/figure-b1.png" width="1439" height="997" alt="Validation loss versus optimizer step for the 67M model. AK-AdamW stays below AdamW from step 2,000 to 19,000, ending near 2.75 against about 2.83 for AdamW."></div>
+    </div>
+  </div>
+  <figcaption><b>(a) Activation-aware memory in fixed input coordinates.</b> Each radius is the stored response along a unit input direction. The dashed curve shows memory before the update, blue shows retained memory, and the green band’s radial thickness is the additive new write. With the current unit activation aligned with $u_1$, EMA retains $\beta$ of old memory along both axes; AK retains $\beta-\eta$ along $u_1$ and $\beta$ along its perpendicular $u_2$. The green band is largest along $u_1$ and vanishes along $u_2$. Both methods start from the same memory and use identical input and error. The circular arcs follow the exact scalar response; they are not covariance ellipses. <b>(b)</b> FineWeb-Edu validation loss of the 67M model versus optimizer steps, summarizing three seeds. AK-AdamW reaches matched validation-loss levels in 39.25% fewer steps on average.</figcaption>
+</figure>
 
 ## **The Memory Horizon Gap**
 
@@ -64,7 +76,7 @@ M_t=\beta M_{t-1}
 +\eta\bigl(\delta_t-M_{t-1}\hat{x}_t\bigr)\hat{x}_t^\top.
 $$
 
-Here, $\hat{x}_t=x_t/||x_t||_2$ is the normalized input activation, and $\eta$ controls the memory correction separately from the model's learning rate.
+Here, $\hat{x}_t=x_t/\lVert x_t\rVert_2$ is the normalized input activation, and $\eta$ controls the memory correction separately from the model's learning rate.
 
 The update performs three simple operations:
 
@@ -89,9 +101,10 @@ For example, when the current key points along a unit direction $u$, old informa
 
 **Repeatedly queried directions are therefore refreshed more aggressively.** Directions that are rarely queried receive fewer such corrections, although they still undergo global decay.
 
-[ Placeholder for Figure A. ]
-
-***Activation-keyed memory update.** The incoming input selects the association to correct: global decay affects the entire memory, while the delta rule additionally removes and rewrites information along the queried direction.*
+<figure id="ak-momentum-figure-a" class="d-figure l-page">
+  {% include figure-a-embed.html %}
+  <figcaption><b>Activation-keyed memory update.</b> The colored field shows the stored readout in every direction of the illustrated input quadrant: its radius along a unit direction $q$ is $M_{t} q$. Only the query arrow moves when a new input arrives; the field changes when memory is retained or updated. This shows the coupled effect of mixed inputs without rotating the coordinate system.</figcaption>
+</figure>
 
 ## **What Is Momentum Actually Learning?**
 
@@ -137,19 +150,38 @@ Using Llama-2-style transformers pretrained on FineWeb-Edu, we compare AK-AdamW 
 
 AK-AdamW consistently reaches matched validation-loss levels in fewer steps:
 
+<figure id="ak-momentum-table-steps" class="d-table" markdown="1">
+<div class="d-table__wrap" markdown="1">
+
 | Model | Training tokens | Seeds | Mean step reduction |
 | --- | --- | --- | --- |
 | 67M | 10B | 3 | **39.25%** ± 4.55 pp |
 | 370M | 10B | 3 | **17.61%** ± 0.95 pp |
 | 1B | 20B | 1 | **13.43%** |
 
-The step reductions are averaged over matched validation-loss levels within the reported measurement window. The uncertainties are standard deviations across seeds, while the 1B experiment serves as a single-seed scale check.
+</div>
+<figcaption><b>AK-AdamW step reduction relative to AdamW.</b> The step reductions are averaged over matched validation-loss levels within the reported measurement window. The uncertainties are standard deviations across seeds, in percentage points (pp), while the 1B experiment serves as a single-seed scale check.</figcaption>
+</figure>
 
 The improvements persist across the evaluated training trajectories, with AK-AdamW also reaching lower final validation loss at all three scales.
 
-[ Placeholder for Figure B. ]
-
-***FineWeb-Edu validation loss versus optimizer steps.** AK-AdamW reaches matched loss levels earlier than AdamW across all three evaluated model sizes. The 67M and 370M curves summarize three seeds; the 1B comparison uses one seed.*
+<figure id="ak-momentum-figure-b" class="d-figure l-page">
+  <div class="d-figure__grid d-figure__grid--3">
+    <div>
+      <div class="d-figure__label">(a) 67M</div>
+      <div class="d-figure__frame"><img src="{{ site.baseurl }}/assets/ak-momentum/figure-b/figure-b1.png" width="1439" height="997" loading="lazy" alt="Validation loss versus optimizer step for the 67M model. AK-AdamW stays below AdamW from step 2,000 to 19,000, ending near 2.75 against about 2.83 for AdamW."></div>
+    </div>
+    <div>
+      <div class="d-figure__label">(b) 370M</div>
+      <div class="d-figure__frame"><img src="{{ site.baseurl }}/assets/ak-momentum/figure-b/figure-b2.png" width="1439" height="997" loading="lazy" alt="Validation loss versus optimizer step for the 370M model. AK-AdamW stays below AdamW from step 2,000 to 19,000, ending near 2.41 against about 2.44 for AdamW."></div>
+    </div>
+    <div>
+      <div class="d-figure__label">(c) 1B</div>
+      <div class="d-figure__frame"><img src="{{ site.baseurl }}/assets/ak-momentum/figure-b/figure-b3.png" width="1439" height="997" loading="lazy" alt="Validation loss versus optimizer step for the 1B model. AK-AdamW stays below AdamW from step 3,000 to about 38,000; both end near 2.23, with AK-AdamW slightly lower."></div>
+    </div>
+  </div>
+  <figcaption><b>FineWeb-Edu validation loss versus optimizer steps.</b> AK-AdamW reaches matched loss levels earlier than AdamW across all three evaluated model sizes. The 67M and 370M curves <b>(a, b)</b> summarize three seeds; the 1B comparison <b>(c)</b> uses one seed.</figcaption>
+</figure>
 
 ### Efficiency and Computational Overhead
 
@@ -161,9 +193,19 @@ The practical question is whether improved convergence compensates for this over
 
 In the reported single-seed wall-clock comparisons at 67M and 370M, AK-AdamW initially trails AdamW but eventually crosses over, reaching matched validation-loss levels sooner after the saved steps outweigh their additional cost.
 
-[ Placeholder for Figure C. ]
-
-***Validation loss versus cumulative training time.** AK-AdamW incurs additional computation from the beginning, but its faster convergence eventually offsets this overhead in the reported 67M and 370M comparisons.*
+<figure id="ak-momentum-figure-c" class="d-figure l-page">
+  <div class="d-figure__grid d-figure__grid--2">
+    <div>
+      <div class="d-figure__label">(a) 67M</div>
+      <div class="d-figure__frame"><img src="{{ site.baseurl }}/assets/ak-momentum/figure-c/figure-c1.png" width="1437" height="997" loading="lazy" alt="Validation loss versus cumulative wall-clock time for the 67M model over about 18 hours. AK-AdamW starts marginally above AdamW, crosses below it shortly afterwards, and ends near 2.77 against about 2.80 for AdamW."></div>
+    </div>
+    <div>
+      <div class="d-figure__label">(b) 370M</div>
+      <div class="d-figure__frame"><img src="{{ site.baseurl }}/assets/ak-momentum/figure-c/figure-c2.png" width="1439" height="997" loading="lazy" alt="Validation loss versus cumulative wall-clock time for the 370M model over about 46 hours. The two curves start together; AK-AdamW then stays below AdamW and ends near 2.42 against about 2.43 for AdamW."></div>
+    </div>
+  </div>
+  <figcaption><b>Validation loss versus cumulative training time.</b> AK-AdamW incurs additional computation from the beginning, but its faster convergence eventually offsets this overhead in the reported 67M <b>(a)</b> and 370M <b>(b)</b> comparisons.</figcaption>
+</figure>
 
 Importantly, AK-Momentum requires **no additional persistent optimizer-state buffers** beyond the base optimizer, although its correction introduces temporary-memory and computational costs.
 
@@ -223,9 +265,19 @@ Compared with AdamW, AK-AdamW exhibits stronger momentum–gradient alignment, l
 
 The learned input features also show lower covariance condition numbers, higher effective rank, and less variance concentrated in the leading direction.
 
-[ Placeholder for Figure D. ]
-
-***Mechanistic diagnostics during 67M pretraining.** The buffer–gradient prediction error is lower under AK-AdamW, while the input-feature covariance exhibits less concentration in its leading direction. Both observations are consistent with the proposed mechanism.*
+<figure id="ak-momentum-figure-d" class="d-figure">
+  <div class="d-figure__grid d-figure__grid--2">
+    <div>
+      <div class="d-figure__label">(a) Buffer–gradient error</div>
+      <div class="d-figure__frame"><img src="{{ site.baseurl }}/assets/ak-momentum/figure-d/mom_grad_error_mean.svg" width="220" height="165" loading="lazy" alt="Mean buffer–gradient prediction error versus training step. Both optimizers start near 1.6. AdamW keeps returning to spikes of about 1.2 to 1.3 throughout training, while AK-AdamW settles near 1.03 in the second half."></div>
+    </div>
+    <div>
+      <div class="d-figure__label">(b) Leading-direction variance</div>
+      <div class="d-figure__frame"><img src="{{ site.baseurl }}/assets/ak-momentum/figure-d/feat_cov_top1_var_frac_max.svg" width="220" height="165" loading="lazy" alt="Largest fraction of input-feature variance in the leading covariance direction versus training step. AdamW rises to about 0.7 within the first few thousand steps and stays there; AK-AdamW drops to about 0.22 early and then remains between about 0.35 and 0.48."></div>
+    </div>
+  </div>
+  <figcaption><b>Mechanistic diagnostics during 67M pretraining.</b> <b>(a)</b> The buffer–gradient prediction error is lower under AK-AdamW, while <b>(b)</b> the input-feature covariance exhibits less concentration in its leading direction. Both observations are consistent with the proposed mechanism.</figcaption>
+</figure>
 
 Together, these findings support the memory-based interpretation. They do not, by themselves, isolate the causal contribution of each mechanism to the observed optimization gains.
 

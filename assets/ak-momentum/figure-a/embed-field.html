@@ -1,0 +1,21 @@
+<!-- Replace src with the published URL of the animation asset. -->
+<iframe
+  id="ak-memory-field-figure"
+  src="/assets/figures/ak-momentum-field.html"
+  title="AK-MOMENTUM: AN ACTIVATION-AWARE GRADIENT MEMORY"
+  loading="lazy"
+  scrolling="no"
+  style="display:block;width:100%;max-width:1024px;height:1320px;margin:0 auto;border:0;"
+></iframe>
+<script>
+(() => {
+  const frame=document.getElementById('ak-memory-field-figure');
+  window.addEventListener('message',event=>{
+    if(event.source!==frame.contentWindow)return;
+    const data=event.data;
+    if(data&&data.type==='ak-memory-resize'&&Number.isFinite(data.height)&&data.height>100&&data.height<1500){
+      frame.style.height=Math.ceil(data.height)+'px';
+    }
+  });
+})();
+</script>
