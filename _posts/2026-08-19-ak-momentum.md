@@ -8,6 +8,7 @@ authors:
     url: /
     affiliation: CMU
   - name: Guannan Qu
+    affiliation: CMU
 venue: 'NeurIPS 2026 Main Track (Poster)'
 thumbnail: /assets/ak-momentum/figure-a/ak-momentum-figure-a.png
 tags:
