@@ -55,7 +55,7 @@ Yet conventional momentum forgets the old information for all directions at the 
 > Can we leverage the information within the incoming gradient itself to decide which part of momentum's memory to refresh?
 > 
 
-## **AK-Momentum: Momentum as Associative Memory**
+## **Momentum as Associative Memory**
 
 AK-Momentum resolves this tension by treating the momentum buffer as an associative memory and redesigning its update rule. 
 
