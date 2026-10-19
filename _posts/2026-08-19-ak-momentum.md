@@ -90,7 +90,7 @@ For example, when the current key points along a unit direction $u$, old informa
 
 [ Placeholder for Figure A. ]
 
-*Figure A. **Activation-keyed memory update.** The incoming input selects the association to correct: global decay affects the entire memory, while the delta rule additionally removes and rewrites information along the queried direction.*
+***Activation-keyed memory update.** The incoming input selects the association to correct: global decay affects the entire memory, while the delta rule additionally removes and rewrites information along the queried direction.*
 
 ## **What Is Momentum Actually Learning?**
 
@@ -148,7 +148,7 @@ The improvements persist across the evaluated training trajectories, with AK-Ada
 
 [ Placeholder for Figure B. ]
 
-*Figure B. **FineWeb-Edu validation loss versus optimizer steps.** AK-AdamW reaches matched loss levels earlier than AdamW across all three evaluated model sizes. The 67M and 370M curves summarize three seeds; the 1B comparison uses one seed.*
+***FineWeb-Edu validation loss versus optimizer steps.** AK-AdamW reaches matched loss levels earlier than AdamW across all three evaluated model sizes. The 67M and 370M curves summarize three seeds; the 1B comparison uses one seed.*
 
 ### Efficiency and Computational Overhead
 
@@ -162,7 +162,7 @@ In the reported single-seed wall-clock comparisons at 67M and 370M, AK-AdamW ini
 
 [ Placeholder for Figure C. ]
 
-*Figure C. **Validation loss versus cumulative training time.** AK-AdamW incurs additional computation from the beginning, but its faster convergence eventually offsets this overhead in the reported 67M and 370M comparisons.*
+***Validation loss versus cumulative training time.** AK-AdamW incurs additional computation from the beginning, but its faster convergence eventually offsets this overhead in the reported 67M and 370M comparisons.*
 
 Importantly, AK-Momentum requires **no additional persistent optimizer-state buffers** beyond the base optimizer, although its correction introduces temporary-memory and computational costs.
 
@@ -224,7 +224,7 @@ The learned input features also show lower covariance condition numbers, higher 
 
 [ Placeholder for Figure D. ]
 
-*Figure D. **Mechanistic diagnostics during 67M pretraining.** The buffer–gradient prediction error is lower under AK-AdamW, while the input-feature covariance exhibits less concentration in its leading direction. Both observations are consistent with the proposed mechanism.*
+***Mechanistic diagnostics during 67M pretraining.** The buffer–gradient prediction error is lower under AK-AdamW, while the input-feature covariance exhibits less concentration in its leading direction. Both observations are consistent with the proposed mechanism.*
 
 Together, these findings support the memory-based interpretation. They do not, by themselves, isolate the causal contribution of each mechanism to the observed optimization gains.
 
