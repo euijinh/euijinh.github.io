@@ -23,15 +23,9 @@ tags:
 > Conventional momentum forgets past gradients uniformly across input directions. **Activation-Keyed Momentum (AK-Momentum)** instead treats momentum as an associative memory of input activations and output-side errors, using the delta rule to selectively refresh stored associations, yielding direction-dependent forgetting and implicit input-side preconditioning.
 > 
 
----
-
 [ Placeholder for headline figure(s): Figure H. and 67M plot of Figure B. ]
 
----
-
-## The Memory Horizon Gap
-
----
+## **The Memory Horizon Gap**
 
 Conventional momentum maintains an exponentially weighted memory of past gradients:
 
@@ -49,9 +43,7 @@ Yet conventional momentum forgets the old information for all directions at the 
 > **Can we leverage the information within the incoming gradient itself to decide which part of momentum's memory to refresh?**
 > 
 
-## AK-Momentum: Momentum as Associative Memory
-
----
+## **AK-Momentum: Momentum as Associative Memory**
 
 AK-Momentum resolves this tension by treating the momentum buffer as an associative memory and redesigning its update rule. 
 
@@ -103,8 +95,6 @@ For example, when the current key points along a unit direction $u$, old informa
 
 ## **What Is Momentum Actually Learning?**
 
----
-
 Conventional EMA momentum can be interpreted as estimating the population gradient by minimizing a weight-space prediction objective:
 
 $$
@@ -137,9 +127,7 @@ The first term trains the memory to predict output-side errors from incoming act
 
 This difference is also what gives rise to the implicit input-side correction discussed below. In AK-AdamW, the resulting memory replaces AdamW's first-moment buffer; AdamW's second-moment normalization remains in the parameter update.
 
-## Empirical Results
-
----
+## **Empirical Results**
 
 ### **Language-Model Pretraining**
 
@@ -180,8 +168,6 @@ In the reported single-seed wall-clock comparisons at 67M and 370M, AK-AdamW ini
 Importantly, AK-Momentum requires **no additional persistent optimizer-state buffers** beyond the base optimizer, although its correction introduces temporary-memory and computational costs.
 
 ## **Why It Helps: Theory and Diagnostics**
-
----
 
 The analysis identifies three closely related consequences of the activation-keyed update.
 
@@ -245,8 +231,6 @@ Together, these findings support the memory-based interpretation. They do not, b
 
 ## **Takeaways and Open Questions**
 
----
-
 **Momentum need not simply average past gradients.** By exploiting their natural input–error factorization, we can design a memory update that selectively refreshes stored associations according to the inputs encountered during training.
 
 AK-Momentum develops this idea through a delta-rule correction, connecting associative memory, direction-dependent forgetting, and implicit input-side preconditioning within a single optimizer buffer.
@@ -256,7 +240,7 @@ Our experiments show encouraging improvements in the evaluated language-model an
 More broadly, this work suggests that **the input–error factorized gradient can inform not only how parameters are updated, but also how an optimizer remembers and refreshes information.**
 
 
-## Paper and citation
+## **Paper and citation**
 {: #bibtex}
 
 The [full paper](https://arxiv.org/abs/2608.19491v2) provides the proofs, additional diagnostics, experimental settings, and hyperparameter studies. Questions about the work can be directed to [Euijin Hong](mailto:ehong@andrew.cmu.edu).
