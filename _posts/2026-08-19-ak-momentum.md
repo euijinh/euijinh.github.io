@@ -6,9 +6,8 @@ permalink: /posts/2026/ak-momentum/
 authors:
   - name: Euijin Hong
     url: /
-    affiliation: Carnegie Mellon University
+    affiliation: CMU
   - name: Guannan Qu
-    affiliation: Carnegie Mellon University
 venue: 'NeurIPS 2026 Main Track (Poster)'
 thumbnail: /assets/ak-momentum/figure-a/ak-momentum-figure-a.png
 tags:
