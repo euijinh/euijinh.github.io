@@ -40,7 +40,7 @@ But neural-network activations are mostly not uniformly distributed. Some input 
 
 Yet conventional momentum forgets the old information for all directions at the same rate, regardless of how frequently each is observed.
 
-> **Can we leverage the information within the incoming gradient itself to decide which part of momentum's memory to refresh?**
+> Can we leverage the information within the incoming gradient itself to decide which part of momentum's memory to refresh?
 > 
 
 ## **AK-Momentum: Momentum as Associative Memory**
@@ -61,10 +61,10 @@ AK-Momentum updates this memory using the classical **delta rule**:
 
 $$
 M_t=\beta M_{t-1}
-+\eta\bigl(\delta_t-M_{t-1}\hat{x}_t\bigr)\hat{x}_t^\top
++\eta\bigl(\delta_t-M_{t-1}\hat{x}_t\bigr)\hat{x}_t^\top.
 $$
 
-Here, $\hat{x}_t=x_t/|x_t|_2$ is the normalized input activation, and $\eta$ controls the memory correction separately from the model's learning rate.
+Here, $\hat{x}_t=x_t/||x_t||_2$ is the normalized input activation, and $\eta$ controls the memory correction separately from the model's learning rate.
 
 The update performs three simple operations:
 
