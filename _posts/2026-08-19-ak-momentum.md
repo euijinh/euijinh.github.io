@@ -1,8 +1,8 @@
 ---
 title: 'AK-Momentum'
-description: 'Momentum as associative memory of input activations and output-side errors'
+description: 'Rethinking Momentum as an Activation-Keyed Associative Memory'
 date: 2026-08-19
-permalink: /posts/2026/08/ak-momentum/
+permalink: /posts/2026/ak-momentum/
 authors:
   - name: Euijin Hong
     url: /
@@ -18,194 +18,246 @@ tags:
   - Associative Memory
 ---
 
-***Activation-Keyed Momentum: An anisotropic momentum update via the delta rule***
+\[[Paper](https://arxiv.org/abs/2608.19491v2)\] \[[Code](https://github.com/euijinh/ak-momentum)\] \[[BibTeX](#bibtex)\]
 
-\[[Paper](https://arxiv.org/abs/2608.19491v2)\] \[[PDF](https://arxiv.org/pdf/2608.19491v2)\] \[[Code](https://github.com/euijinh/ak-momentum)\]
+> Conventional momentum forgets past gradients uniformly across input directions. **Activation-Keyed Momentum (AK-Momentum)** instead treats momentum as an associative memory of input activations and output-side errors, using the delta rule to selectively refresh stored associations, yielding direction-dependent forgetting and implicit input-side preconditioning.
+> 
 
-Modern optimizers from AdamW to Muon use momentum to form their updates. One intuitive way to interpret the role of momentum is to view it as a "memory" of previous gradients, which the optimizer uses to dampen oscillations and accelerate convergence. Standard momentum, also known as exponential moving average (EMA) momentum, lets that memory fade at the same rate in every input direction.
+---
 
-However, this momentum update rule alone does not fully mitigate the "anisotropy" of the input activations (i.e., the imbalance among eigenvalues in the input spectrum) during neural network training. Such anisotropy arises from the non-uniform distribution of the input data and intermediate activations, which evolve as training progresses. The standard EMA momentum update rule does not account for this anisotropy when updating the weights.
+[ Placeholder for headline figure(s): Figure H. and 67M plot of Figure B. ]
 
-Preconditioning-based optimizers such as K-FAC, Shampoo, and SOAP apply additional statistical information on top of this momentum to guide and recalibrate the update, mitigate anisotropy, and improve convergence. They leave the EMA update rule unchanged, even though its direction-independent decay is the source of tension we want to address. Although these methods are theoretically sound and practically effective (especially in terms of progress per training step), they often require heavy computation and additional memory to maintain and process these statistics.
+---
 
-So, the problem is clear: *we want a method to update the weights using a momentum buffer that reflects the anisotropy of the input activations, but without the computational and memory costs of heavy preconditioners*.
+## The Memory Horizon Gap
 
-Here, a simple yet powerful idea comes into play: why not use the natural, freely available factorization of the gradient as an outer product of the output-side error and the input activation, and use the input activation to selectively forget information in the momentum buffer? This is exactly how the delta rule works in associative memories: it selectively forgets and updates stored associations using the incoming *keys*. Correspondingly, the input activation becomes the *key* in the delta rule, and the output-side error becomes the *value* associated with it. The momentum buffer is therefore "*activation-keyed*", and the resulting momentum update is a single-step online delta-rule update in this key-value formulation.
+---
 
-That is the whole motivation and idea behind Activation-Keyed Momentum (AK-Momentum). AK-Momentum makes the update depend on the input directions a layer actually sees, using those inputs to decide which stored information to refresh. Consequently, **AK-Momentum offers a preconditioner-like update directly to the momentum buffer, without explicitly forming a preconditioner or adding persistent optimizer-state buffers**.
-
-The proposed update rule operates inside the momentum buffer. In FineWeb-Edu pretraining, **AK-AdamW reaches AdamW's validation loss in up to $(46.39\pm4.32)\%$ fewer steps at 67M and $(22.12\pm0.80)\%$ fewer at 370M**, over three seeds. A single-seed 1B run provides a further scale check. Below, we explain the mechanism, what the theory establishes, and when the saved steps outweigh the additional work per step.
-
-## Why change what momentum remembers?
-
-For a gradient $g_t$, an exponential moving average, or EMA, updates its buffer as
+Conventional momentum maintains an exponentially weighted memory of past gradients:
 
 $$
-M_t^{\mathrm{EMA}}=\beta M_{t-1}^{\mathrm{EMA}}+(1-\beta)g_t.
+M_t^{\mathrm{EMA}}
+=\beta M_{t-1}^{\mathrm{EMA}}+(1-\beta)g_t.
 $$
 
-The coefficient $\beta$ controls how much previous information survives. Every direction receives the same decay, even when the layer's inputs are distributed very unevenly across directions. We call this unevenness *anisotropy*.
+The coefficient $\beta$ controls how quickly old information fades. Consequently, **every direction in the existing memory decays by the same factor $\beta$.** 
 
-Such anisotropy reveals an important characteristic that an ideal momentum update should take into account. Frequently encountered directions can provide repeated opportunities to refresh outdated information. Rarely encountered directions receive fewer such opportunities. Our starting question is whether the momentum update can use this difference directly.
+But neural-network activations are mostly not uniformly distributed. Some input directions are encountered frequently, providing repeated opportunities to refresh the stored information. Other directions are encountered less often, requiring longer retention of the memory.
 
-## A memory for input directions
+Yet conventional momentum forgets the old information for all directions at the same rate, regardless of how frequently each is observed.
 
-Consider one linear layer, $y=Wx$. For one sample, its weight gradient factorizes as $g=\delta x^\top$, where $x$ is the input activation and $\delta=\partial\mathcal L/\partial y$ is the backpropagated error from the output side.
+> **Can we leverage the information within the incoming gradient itself to decide which part of momentum's memory to refresh?**
+> 
 
-This gives the gradient a natural association: **the input is a *key*, and the output-side error is the *value* associated with it**. And a gradient-shaped momentum buffer can store these associations. Given an input, multiplying the buffer by that input retrieves a prediction of the corresponding error.
+## AK-Momentum: Momentum as Associative Memory
 
-To use this association to account for anisotropy, AK-Momentum updates this memory through the classical delta rule. Using normalized input activations as keys (a design choice used in our deployed implementation and experiments), let $\hat x_t=x_t/\lVert x_t\rVert_2$. The update rule is:
+---
 
-$$
-\boxed{M_t=\beta M_{t-1}+\eta\bigl(\delta_t-M_{t-1}\hat x_t\bigr)\hat x_t^\top.}
-$$
+AK-Momentum resolves this tension by treating the momentum buffer as an associative memory and redesigning its update rule. 
 
-Here, $\eta$ controls the *correction* to the buffer; it is separate from the learning rate that updates the model's weights. The rule has three operations:
-
-1. **Read.** Retrieve the stored prediction $M_{t-1}\hat x_t$ for the current input.
-2. **Compare.** Compute the difference between the observed error $\delta_t$ and that prediction.
-3. **Correct.** Write the difference back along the current input direction, while retaining the overall decay $\beta$.
-
-To see what changes, imagine two perpendicular input directions, $u$ and $v$. The current normalized input is $u$. The update gives $M_tu=(\beta-\eta)M_{t-1}u+\eta\delta_t$, while $M_tv=\beta M_{t-1}v$.
-
-
-| Old information being carried forward | EMA                   | AK-Momentum                |
-| ------------------------------------- | --------------------- | -------------------------- |
-| Along the queried direction $u$       | Multiplied by $\beta$ | Multiplied by $\beta-\eta$ |
-| Along the perpendicular direction $v$ | Multiplied by $\beta$ | Multiplied by $\beta$      |
-
-
-The additional correction acts where the new input points. If $u$ is queried repeatedly, its old information is repeatedly attenuated and refreshed. Information along $v$ still undergoes ordinary EMA decay. For this illustration, take $0<\eta\leq\beta<1$, so both retention factors are nonnegative.
-
-{% include figure-a-embed.html %}
-
-Normalizing the key prevents its magnitude from arbitrarily amplifying the forgetting term. The model's forward computation still uses its ordinary activations. The experiments apply the update in batches, as detailed later. [Paper, Sections 2–3 and Appendix L](https://arxiv.org/pdf/2608.19491v2#page=3)
-
-## Fewer steps to the same validation loss
-
-Our main comparison replaces AdamW's first-moment update with AK-Momentum, producing **AK-AdamW**. Its second-moment calculation, bias-correction procedure, and decoupled weight decay follow AdamW.
-
-We pretrain Llama-2-style, 24-layer decoder-only transformers on FineWeb-Edu, with 2,048-token sequences and 524,288 training tokens per optimizer step. Paired AdamW and AK-AdamW runs share initialization, data order, architecture, and training schedule. Optimizer settings are tuned separately at 67M and transferred to larger widths using maximal-update parameterization, or $\mu$P.
-
-AK-AdamW reaches matched validation-loss levels in fewer steps and finishes at a lower validation loss at all three scales we evaluate.
-
-
-| Model | Training tokens | Seeds | Mean step reduction (%) | Maximum step reduction (%) |
-| ----- | --------------- | ----- | ------------------- | ---------------------- |
-| 67M   | 10B             | 3     | $39.25\pm4.55$      | $46.39\pm4.32$         |
-| 370M  | 10B             | 3     | $17.61\pm0.95$      | $22.12\pm0.80$         |
-| 1B    | 20B             | 1     | $13.43$             | $19.37$                |
-
-
-These are reductions in steps to reach the **same validation loss**, measured across matched loss levels in the window beginning at step 2,000. “Mean” averages across those levels; “maximum” selects the largest saving. The $\pm$ values report seed standard deviations. The 1B run is a scale check with one seed.
-
-<!-- TODO: Upload Figure B from the paper. -->
-*Figure B. Validation loss during FineWeb-Edu pretraining. Lower is better. Curves at 67M and 370M are means over three seeds, with bands showing variation across runs; the 1B comparison uses one seed. The plotted range omits the early high-loss region to make the subsequent separation readable.*
-
-We also compare against Muon at 67M and 370M. AK-AdamW's validation-loss curves remain below that tuned baseline in the reported runs. All three optimizers use the same Optuna search procedure with comparable budgets per tuned dimension, although total search compute differs. This comparison describes the configurations and training protocol we tested. [Paper, Section 4.1 and Appendices N, O, and T](https://arxiv.org/pdf/2608.19491v2#page=10)
-
-## From fewer steps to less training time and compute
-
-Each AK-AdamW step requires additional computation. The practical question is whether the saved steps compensate for this cost. The following tables report our updated per-step measurements.
-
-**FLOPs per step**
-
-| Scale | AdamW | AK-AdamW | Overhead |
-| ----- | ----- | -------- | -------- |
-| 67M | 310,870,806,626,304 | 341,968,517,332,992 | **10.003%** |
-| 370M | 1,423,266,262,548,480 | 1,644,439,898,423,296 | **15.540%** |
-| 1B | 3,738,373,894,176,768 | 4,415,673,056,886,784 | **18.117%** |
-
-**Wall-clock time per step in the real training loop**
-
-| Scale | Micro-batch | AdamW | AK-AdamW | Overhead |
-| ----- | ----------- | ----- | -------- | -------- |
-| 67M | 32×8 both | 2.5104 s | 2.8935 s | **15.26%** |
-| 370M | 32×8 both | 6.5566 s | 7.7205 s | **17.75%** |
-| 1B | 8×32 both | 10.4213 s | 12.3431 s | **18.44%** |
-
-Both optimizers use the same micro-batch configuration at each scale. In both tables, overhead is measured relative to AdamW. These are per-step costs; total FLOPs and wall-clock savings at matched validation loss also depend on how many steps each optimizer needs to reach that loss. Early in training, the additional work may not yet have paid for itself.
-
-<!-- TODO: Update Figure C using the corresponding training trajectories and the revised timing measurements above. Recalculate matched-loss FLOPs and wall-clock savings before reporting numerical totals. -->
-*Figure C. Validation loss against cumulative elapsed training time. The additional cost is paid from the first step. A crossover shows where saved steps begin to outweigh the per-step overhead; lower validation loss at the same elapsed time is better.*
-
-AK-Momentum adds no persistent optimizer-state buffers beyond those of the base optimizer. It does require temporary activation-related storage and additional computation. [Paper, Table 3 and Appendix M](https://arxiv.org/pdf/2608.19491v2#page=11)
-
-## What the analysis establishes
-
-**Memory becomes direction-dependent.** Under the paper's independent, stationary-key assumptions, old information along an eigenvector of the normalized input second moment has expected retention factor $\beta-\eta\hat\lambda_i$. Here, $\hat\lambda_i=\mathbb E[(u_i^\top\hat x)^2]$ measures how strongly normalized inputs occupy that direction. With nonnegative retention factors, larger values mean faster forgetting; directions with values near zero retain an EMA-like memory horizon. This is the general version of the two-direction example. [Lemma 3.7](https://arxiv.org/pdf/2608.19491v2#page=7)
-
-**The buffer learns a regularized predictor.** When the relevant statistics can be treated as fixed and the recursion is stable, the expected buffer approaches a linear predictor of output-side errors from input keys, with a penalty on large buffer weights. Its fixed point applies an input-side correction without explicitly inverting a matrix during each update. This describes a different target from EMA's mean raw gradient. [Theorem 3.4 and Corollary 3.5](https://arxiv.org/pdf/2608.19491v2#page=6)
-
-Mathematical detail: the normalized-key fixed point
-
-Write $\hat\Sigma=\mathbb E[\hat x\hat x^\top]$ and $\hat G=\mathbb E[\delta\hat x^\top]$. Under the fixed-statistics approximation and stability condition in the paper,
+Consider a linear layer $y=Wx$. For a single training example, its weight gradient naturally factorizes into two components:
 
 $$
-M^*=\hat G(\mu I+\hat\Sigma)^{-1},\qquad \mu=\frac{1-\beta}{\eta}.
+g_t=\delta_t x_t^\top,
 $$
 
-Along an eigenvector $u_i$ of $\hat\Sigma$, this gives $M^*u_i=\hat G u_i/(\mu+\hat\lambda_i)$. The inverse appears in the characterization of the limiting buffer; the implemented recurrence uses matrix products.
+where $x_t$ is the input activation and $\delta_t=\partial\mathcal{L}/\partial y_t$ is the backpropagated error.
 
-The relationship to K-FAC concerns an input-side factor. Full K-FAC also includes an output-side factor, and the deployed rule uses normalized input statistics. Identifying its target with a correction of the raw mean gradient requires the additional magnitude assumptions in Corollary 3.5.
+This suggests a different interpretation of momentum: a matrix-valued **associative memory**, with the input activation as its *key* and the output-side error as its *value*. Given an input key, the memory predicts the corresponding error.
 
-**Tracking can improve when the target changes.** The analysis characterizes adaptation after shifts to new statistics and bounds lag under specified drift assumptions. In the analyzed parameter dynamics, it also establishes faster per-direction convergence in the stated oscillatory, or underdamped, regime. That comparison is conditional: the smaller determinant proved in the paper does not by itself guarantee faster convergence at every fixed learning rate. The tracking results also do not establish a global convergence rate for arbitrary nonconvex training. [Sections 3.3–3.4](https://arxiv.org/pdf/2608.19491v2#page=8)
-
-## Measuring the proposed mechanism
-
-Learning curves establish an optimization benefit. To examine the proposed explanation, we also probe the 67M run during training.
-
-One measurement is the relative difference between the buffer and the current gradient, $\lVert M_t-g_t\rVert_F/\lVert g_t\rVert_F$. AK-AdamW has lower error at the logged checkpoints. Another measures how much input-feature variance is concentrated in the leading direction. This concentration is lower under AK-AdamW in the reported comparison.
-
-*Figure D. Two diagnostics from the 67M run. Left: relative momentum–gradient prediction error, where lower means closer agreement with the current gradient. Right: the fraction of input-feature variance in the leading direction, taking the maximum across layers; lower means less concentration in that statistic. Both measurements move in the direction suggested by the proposed mechanism.*
-
-The paper also reports momentum–gradient alignment, output-error prediction alignment, feature condition numbers, and effective rank. Together, these observations support the theoretical picture. They do not independently isolate every causal contribution to the loss improvement. [Paper, Section 4.2](https://arxiv.org/pdf/2608.19491v2#page=11)
-
-## Using AK-Momentum
-
-Applying the method requires access to each supported layer's inputs and output-side errors, in addition to its weight gradient. Our implementation collects these signals through forward and backward hooks. In the language-model experiments, embeddings and the output head use standard AdamW with an auxiliary learning rate.
-
-For the settings studied in the paper, our recommended starting recipe is:
-
-- Use normalized keys, $\beta=0.99$, and $\eta=0.4$.
-- Keep AdamW's second-moment and weight-decay settings as the starting point.
-- Start the main learning rate near one tenth of the tuned AdamW rate, then tune it for the new buffer.
-- Treat the embedding/output-head learning rate separately; our selected configurations use an independently tuned auxiliary rate.
-
-This is a starting recipe from the reported experiments. The headline AK-AdamW configuration used $\eta=0.37$, selected by Optuna. A separate single-seed sensitivity study found a broad basin over $\eta\in[0.10,0.99]$, with final validation loss varying by at most 0.015 nats in that study.
-
-Under the paper's $\mu$P setup, $\eta$ and $\beta$ transfer across widths without rescaling, while the learning rate follows the base optimizer's width rule. The 370M and 1B runs inherit settings tuned at the 67M proxy. [Paper, Appendices N and Q–U](https://arxiv.org/pdf/2608.19491v2#page=32)
-
-Implementation detail: the batch update
-
-For $N$ examples or tokens, let $\hat X$ contain row-normalized input keys and $\Delta$ contain output-side errors. The deployed batch rule is
+AK-Momentum updates this memory using the classical **delta rule**:
 
 $$
-G_t=\frac{\Delta^\top\hat X}{N},\qquad
-\hat\Sigma_t=\frac{\hat X^\top\hat X}{N},\qquad
-M_t=\beta M_{t-1}+\eta(G_t-M_{t-1}\hat\Sigma_t).
+M_t=\beta M_{t-1}
++\eta\bigl(\delta_t-M_{t-1}\hat{x}_t\bigr)\hat{x}_t^\top
 $$
 
-$G_t$ uses normalized keys. AdamW's second moment continues to use the ordinary weight gradient. The correction can be evaluated through either $M(\hat X^\top\hat X)$ or $(M\hat X^\top)\hat X$, including the batch normalization factor, with contraction order chosen by layer shape. The latter avoids forming the full input Gram matrix. [Appendices L–M](https://arxiv.org/pdf/2608.19491v2#page=26)
+Here, $\hat{x}_t=x_t/|x_t|_2$ is the normalized input activation, and $\eta$ controls the memory correction separately from the model's learning rate.
 
-## Connections and current scope
+The update performs three simple operations:
 
-The delta rule and the associative-memory view of optimizers build on earlier work. Our contribution develops an activation-keyed update for the momentum buffer and studies its memory dynamics, scaling, and empirical behavior. [Paper, Appendix B](https://arxiv.org/pdf/2608.19491v2#page=16)
+1. **Read:** Retrieve the stored prediction $M_{t-1}\hat{x}_t$ for the current input.
+2. **Compare:** Measure its error against the observed output-side error, $\delta_t-M_{t-1}\hat{x}_t$.
+3. **Correct:** Write this prediction error back along the current input direction.
 
+Expanding the update reveals the key difference from conventional momentum:
 
-| Approach                 | Mechanism relevant to this comparison                               |
-| ------------------------ | ------------------------------------------------------------------- |
-| EMA momentum             | Scalar decay and averaging of previous gradients                    |
-| AK-Momentum              | Activation-keyed correction within the momentum buffer              |
-| Muon                     | Approximate orthogonalization of a momentum-derived matrix update   |
-| K-FAC, Shampoo, and SOAP | Structured preconditioning using additional statistical information |
+$$
+\begin{aligned}
+M_t={}&
+\underbrace{\beta M_{t-1}}_{\text{Global decay}}\
+&+\underbrace{\eta\delta_t\hat{x}_t^\top}_{\text{New information}}\
+&-\underbrace{\eta(M_{t-1}\hat{x}_t)\hat{x}_t^\top}_{\text{Key-aligned removal}}.
+\end{aligned}
+$$
 
+The last term removes a portion of the old information associated with the current input, rather than uniformly forgetting the entire buffer.
 
-Our experiments evaluate AK-AdamW and AK-SGD. CIFAR-10 experiments provide supporting checks across an MLP, ResNet-18, and ViT-Tiny; the ResNet and ViT summary reports training-loss improvements. Combining AK-Momentum with Muon, Shampoo, or SOAP remains future work, and we do not report Shampoo or SOAP baselines.
+For example, when the current key points along a unit direction $u$, old information along $u$ is retained with factor $\beta-\eta$, while information along an orthogonal direction $v$ retains the ordinary factor $\beta$.
 
-The main evidence covers language-model pretraining up to 1B parameters. Larger models, image generation, reinforcement learning, mixed-modality training, and a controlled comparison against a gradient-keyed delta-rule buffer remain open. The normalized-key rule also has real computational and temporary-memory costs. [Paper, Sections 4.3–5 and Appendix O](https://arxiv.org/pdf/2608.19491v2#page=12)
+**Repeatedly queried directions are therefore refreshed more aggressively.** Directions that are rarely queried receive fewer such corrections, although they still undergo global decay.
+
+[ Placeholder for Figure A. ]
+
+*Figure A. **Activation-keyed memory update.** The incoming input selects the association to correct: global decay affects the entire memory, while the delta rule additionally removes and rewrites information along the queried direction.*
+
+## **What Is Momentum Actually Learning?**
+
+---
+
+Conventional EMA momentum can be interpreted as estimating the population gradient by minimizing a weight-space prediction objective:
+
+$$
+J_w(M)=\frac12\mathbb E\left[||M-g||_F^2\right].
+$$
+
+It asks: **How well does the buffer approximate the observed gradients?**
+
+AK-Momentum takes a different perspective. For a linear layer, the effect of a simple momentum-SGD weight update $\Delta W=-\alpha M$ on its output, at fixed input $x$, is
+
+$$
+\Delta y=\Delta W x=-\alpha Mx.
+$$
+
+This motivates learning the buffer through its predictions in the layer's output space, rather than solely through its distance from gradient matrices.
+
+For the normalized-key update, AK-Momentum performs online stochastic-gradient steps on the regularized objective
+
+$$
+J_{\mathrm{AK}}(M)=
+\frac12\mathbb E\left[||\delta-M\hat{x}||_2^2\right]
++\frac{\mu}{2}||M||_F^2,
+\qquad
+\mu=\frac{1-\beta}{\eta}.
+$$
+
+The first term trains the memory to predict output-side errors from incoming activations; the second arises from the global decay and stabilizes the estimate.
+
+**EMA learns to approximate gradients in weight space. AK-Momentum learns a regularized input-to-error association in function space.**
+
+This difference is also what gives rise to the implicit input-side correction discussed below. In AK-AdamW, the resulting memory replaces AdamW's first-moment buffer; AdamW's second-moment normalization remains in the parameter update.
+
+## Empirical Results
+
+---
+
+### **Language-Model Pretraining**
+
+We evaluate AK-Momentum by replacing AdamW's first-moment update with the proposed rule, resulting in **AK-AdamW**.
+
+Using Llama-2-style transformers pretrained on FineWeb-Edu, we compare AK-AdamW with AdamW under paired training configurations. Both optimizers share the model initialization, data order, and training schedule, with optimizer hyperparameters tuned at 67M and transferred to larger widths using maximal-update parameterization ($\mu$P).
+
+AK-AdamW consistently reaches matched validation-loss levels in fewer steps:
+
+| Model | Training tokens | Seeds | Mean step reduction |
+| --- | --- | --- | --- |
+| 67M | 10B | 3 | **39.25%** ± 4.55 pp |
+| 370M | 10B | 3 | **17.61%** ± 0.95 pp |
+| 1B | 20B | 1 | **13.43%** |
+
+The step reductions are averaged over matched validation-loss levels within the reported measurement window. The uncertainties are standard deviations across seeds, while the 1B experiment serves as a single-seed scale check.
+
+The improvements persist across the evaluated training trajectories, with AK-AdamW also reaching lower final validation loss at all three scales.
+
+[ Placeholder for Figure B. ]
+
+*Figure B. **FineWeb-Edu validation loss versus optimizer steps.** AK-AdamW reaches matched loss levels earlier than AdamW across all three evaluated model sizes. The 67M and 370M curves summarize three seeds; the 1B comparison uses one seed.*
+
+### Efficiency and Computational Overhead
+
+**Fewer optimization steps do not necessarily mean less training time.** AK-Momentum performs additional memory-correction operations, so each training step is more expensive.
+
+In our updated per-step measurements, the additional FLOP costs are approximately **10.00%, 15.54%, and 18.12%** at 67M, 370M, and 1B, respectively. The corresponding measured wall-clock overheads are **15.26%, 17.75%, and 18.44%**.
+
+The practical question is whether improved convergence compensates for this overhead.
+
+In the reported single-seed wall-clock comparisons at 67M and 370M, AK-AdamW initially trails AdamW but eventually crosses over, reaching matched validation-loss levels sooner after the saved steps outweigh their additional cost.
+
+[ Placeholder for Figure C. ]
+
+*Figure C. **Validation loss versus cumulative training time.** AK-AdamW incurs additional computation from the beginning, but its faster convergence eventually offsets this overhead in the reported 67M and 370M comparisons.*
+
+Importantly, AK-Momentum requires **no additional persistent optimizer-state buffers** beyond the base optimizer, although its correction introduces temporary-memory and computational costs.
+
+## **Why It Helps: Theory and Diagnostics**
+
+---
+
+The analysis identifies three closely related consequences of the activation-keyed update.
+
+### **1. Direction-Dependent Memory Horizons**
+
+The input key determines which components of old memory receive additional correction.
+
+Let $\hat{\Sigma}=\mathbb E[\hat{x}\hat{x}^{\top}]$ be the normalized-key second-moment matrix, with eigenvalues $\hat{\lambda}_i$. Under independent, stationary keys, old information along each eigendirection has expected retention factor
+
+$$
+\tilde{\beta}_i=\beta-\eta\hat{\lambda}_i.
+$$
+
+For nonnegative retention factors, the corresponding effective memory horizon is
+
+$$
+\tau_i=\frac{1}{(1-\beta)+\eta\hat{\lambda}_i}.
+$$
+
+Thus, **directions receiving more input excitation have shorter memory horizons**, while weakly excited directions retain a longer, EMA-like history.
+
+This is the mathematical generalization of the two-direction example: forgetting adapts to the distribution of incoming activations.
+
+### **2. Implicit Input-Side Correction**
+
+Under fixed input statistics and the stability conditions of the analysis, the expected momentum buffer approaches
+
+$$
+M^*=\hat{G}(\mu I+\hat{\Sigma})^{-1},
+$$
+
+where $\hat{G}=\mathbb E[\delta\hat{x}^{\top}]$ and $\mu=(1-\beta)/\eta$.
+
+This is a **Tikhonov-regularized Wiener predictor** of output-side errors from normalized input keys.
+
+Viewed as a parameter-update buffer, the same expression applies an implicit input-side correction: directions with larger input second-moment eigenvalues receive relatively smaller scaling.
+
+This resembles the input-side component of structured preconditioning methods such as K-FAC, but arises directly from the momentum recurrence—**without explicitly computing or inverting a preconditioning matrix at each step**.
+
+### **3. Faster Adaptation to Changing Gradients**
+
+As training progresses, both gradients and input statistics change. A momentum buffer must therefore adapt to new information while retaining useful history.
+
+The analysis shows that AK-Momentum can contract expected tracking error toward its evolving target faster than EMA along excited input directions, under the specified tracking assumptions. In simplified optimization dynamics, it also establishes faster per-direction convergence in particular oscillatory regimes.
+
+These results characterize the memory mechanism and its potential optimization benefits; they do not imply universally faster convergence for arbitrary nonconvex networks.
+
+### **Do the Observations Support This Explanation?**
+
+We additionally measure the behavior of the momentum buffer and intermediate representations during 67M language-model training.
+
+Compared with AdamW, AK-AdamW exhibits stronger momentum–gradient alignment, lower relative buffer–gradient error, and better alignment between the memory's predicted and observed output-side errors.
+
+The learned input features also show lower covariance condition numbers, higher effective rank, and less variance concentrated in the leading direction.
+
+[ Placeholder for Figure D. ]
+
+*Figure D. **Mechanistic diagnostics during 67M pretraining.** The buffer–gradient prediction error is lower under AK-AdamW, while the input-feature covariance exhibits less concentration in its leading direction. Both observations are consistent with the proposed mechanism.*
+
+Together, these findings support the memory-based interpretation. They do not, by themselves, isolate the causal contribution of each mechanism to the observed optimization gains.
+
+## **Takeaways and Open Questions**
+
+---
+
+**Momentum need not simply average past gradients.** By exploiting their natural input–error factorization, we can design a memory update that selectively refreshes stored associations according to the inputs encountered during training.
+
+AK-Momentum develops this idea through a delta-rule correction, connecting associative memory, direction-dependent forgetting, and implicit input-side preconditioning within a single optimizer buffer.
+
+Our experiments show encouraging improvements in the evaluated language-model and CIFAR-10 settings, but several questions remain open: whether the gains persist at substantially larger scales and in other training regimes; how AK-Momentum interacts with structured optimizers such as Muon, Shampoo, or SOAP; and whether more efficient fused implementations can further reduce its computational overhead.
+
+More broadly, this work suggests that **the input–error factorized gradient can inform not only how parameters are updated, but also how an optimizer remembers and refreshes information.**
+
 
 ## Paper and citation
+{: #bibtex}
 
 The [full paper](https://arxiv.org/abs/2608.19491v2) provides the proofs, additional diagnostics, experimental settings, and hyperparameter studies. Questions about the work can be directed to [Euijin Hong](mailto:ehong@andrew.cmu.edu).
 
