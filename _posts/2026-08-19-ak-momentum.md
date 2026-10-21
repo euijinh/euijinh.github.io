@@ -34,7 +34,7 @@ tags:
       <div class="d-figure__frame d-figure__frame--match" style="--match-aspect: 864 / 417.6"><img src="{{ site.baseurl }}/assets/ak-momentum/figure-b/figure-b1.png" width="1439" height="997" alt="Validation loss versus optimizer step for the 67M model. AK-AdamW stays below AdamW from step 2,000 to 19,000, ending near 2.75 against about 2.83 for AdamW."></div>
     </div>
   </div>
-  <figcaption><b>(a) Activation-aware memory in fixed input coordinates.</b> Each radius is the stored response along a unit input direction. The dashed curve shows memory before the update, blue shows retained memory, and the green band’s radial thickness is the additive new write. With the current unit activation aligned with $u_1$, EMA retains $\beta$ of old memory along both axes; AK retains $\beta-\eta$ along $u_1$ and $\beta$ along its perpendicular $u_2$. The green band is largest along $u_1$ and vanishes along $u_2$. Both methods start from the same memory and use identical input and error. The circular arcs follow the exact scalar response; they are not covariance ellipses. <b>(b)</b> FineWeb-Edu validation loss of the 67M model versus optimizer steps, summarizing three seeds. AK-AdamW reaches matched validation-loss levels in 39.25% fewer steps on average.</figcaption>
+  <figcaption><b>(a) Demonstration of gradient memories in fixed input coordinates.</b> We compare the gradient memories of EMA and AK-Momentum in a fixed input coordinate system. Each radius is the stored response of the momentum buffer along a unit input direction. The dashed curve shows memory before the update, blue shows retained memory, and the green band’s radial thickness is the additive new write. With the current unit activation aligned with $u_1$, EMA retains $\beta$ of old memory along both axes; AK retains $\beta-\eta$ along $u_1$ and $\beta$ along its perpendicular $u_2$. The green band is largest along $u_1$ and vanishes along $u_2$. Both methods start from the same memory and use identical input and error. The circular arcs follow the exact scalar response. <b>(b)</b> FineWeb-Edu validation loss of the 67M model versus optimizer steps, summarizing three seeds. AK-AdamW reaches matched validation-loss levels in 39.25% fewer steps on average.</figcaption>
 </figure>
 
 ## **The Memory Horizon Gap**
@@ -103,7 +103,7 @@ For example, when the current key points along a unit direction $u$, old informa
 
 <figure id="ak-momentum-figure-a" class="d-figure l-page">
   {% include figure-a-embed.html %}
-  <figcaption><b>Activation-keyed memory update.</b> The colored field shows the stored readout in every direction of the illustrated input quadrant: its radius along a unit direction $q$ is $M_{t} q$. Only the query arrow moves when a new input arrives; the field changes when memory is retained or updated. This shows the coupled effect of mixed inputs without rotating the coordinate system.</figcaption>
+  <figcaption><b>Demonstration of gradient memory updates in fixed input coordinates.</b> We demonstrate the update mechanism of gradient memories of EMA and AK-Momentum in a fixed input coordinate system. Each value has a color, and the memory carries it forward. The colored field shows the stored readout in every direction of the illustrated input quadrant: its radius along a unit direction $q$ is $M_{t} q$. EMA forgets across all directions at the same rate. AK adds forgetting along the activation before writing the new association. The buffers accumulate continuously.</figcaption>
 </figure>
 
 ## **What Is Momentum Actually Learning?**
