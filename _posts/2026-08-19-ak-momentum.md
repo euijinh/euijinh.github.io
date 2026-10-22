@@ -34,7 +34,7 @@ tags:
       <div class="d-figure__frame d-figure__frame--match" style="--match-aspect: 864 / 417.6"><img src="{{ site.baseurl }}/assets/ak-momentum/figure-b/figure-b1.png" width="1439" height="997" alt="Validation loss versus optimizer step for the 67M model. AK-AdamW stays below AdamW from step 2,000 to 19,000, ending near 2.75 against about 2.83 for AdamW."></div>
     </div>
   </div>
-  <figcaption><b>(a) Uniform versus activation-aware memory retention.</b> EMA retains past gradient information uniformly, whereas AK-Momentum adjusts retention along the current activation. Each radius represents the buffer’s response to a unit input direction. Dashed gray shows the previous response, blue the retained response, and green band's radial thickness the added write. With ($\hat{x}_t=u_1$), EMA retains a fraction ($\beta$) of old memory in every direction; AK-Momentum retains ($\beta-\eta$) along ($u_1$) and ($\beta$) along its perpendicular ($u_2$). Both then write along the current activation. <b>(b) FineWeb-Edu validation loss of the 67M model versus optimizer steps across three seeds.</b> AK-AdamW reaches matched validation-loss levels in 39.25% fewer steps on average.</figcaption>
+  <figcaption><b>(a) Uniform versus activation-aware memory retention.</b> EMA retains past gradient information uniformly, whereas AK-Momentum adjusts retention along the current activation. Each radius represents the buffer’s response to a unit input direction. Dashed gray shows the previous response, blue the retained response, and green band's radial thickness the added write. With ($\hat{x}_t=u_1$), EMA retains a fraction ($\beta$) of old memory in every direction; AK-Momentum retains ($\beta-\eta$) along ($u_1$) and ($\beta$) along its perpendicular ($u_2$). Both then write along the current activation. <b>(b) FineWeb-Edu validation loss of the 67M model versus optimizer steps across three seeds.</b> AK-AdamW reaches matched validation-loss levels in 40.85% fewer steps on average.</figcaption>
 </figure>
 
 ## **The Memory Horizon Gap**
@@ -155,9 +155,9 @@ AK-AdamW consistently reaches matched validation-loss levels in fewer steps:
 
 | Model | Training tokens | Seeds | Mean step reduction |
 | --- | --- | --- | --- |
-| 67M | 10B | 3 | **39.25%** ± 4.55 pp |
-| 370M | 10B | 3 | **17.61%** ± 0.95 pp |
-| 1B | 20B | 1 | **13.43%** |
+| 67M | 10B | 3 | **40.85%** ± 4.99 pp |
+| 370M | 10B | 3 | **17.79%** ± 0.95 pp |
+| 1B | 20B | 1 | **13.47%** |
 
 </div>
 <figcaption><b>AK-AdamW step reduction relative to AdamW.</b> The step reductions are averaged over matched validation-loss levels within the reported measurement window. The uncertainties are standard deviations across seeds, in percentage points (pp), while the 1B experiment serves as a single-seed scale check.</figcaption>
